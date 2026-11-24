@@ -1,294 +1,159 @@
 
-/* =====================================
-   AL MAUOOD — PREMIUM STORE
-   Main JavaScript
-===================================== */
+document.addEventListener("DOMContentLoaded", () => {
+  // AL MAUOOD - Islamic Luxury Store
 
-// MOBILE NAVIGATION
+  const BRAND_NAME = "AL MAUOOD";
+  const WHATSAPP_NUMBER = "923096789111";
 
-const menuToggle = document.querySelector('.menu-toggle');
-const navLinks = document.querySelector('.nav-links');
+  // Mobile Navigation
+  const menuToggle = document.querySelector(".menu-toggle");
+  const navMenu = document.querySelector(".nav-menu");
 
-if (menuToggle && navLinks) {
-    menuToggle.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-
-        menuToggle.textContent =
-            navLinks.classList.contains('active') ? '×' : '☰';
+  if (menuToggle && navMenu) {
+    menuToggle.addEventListener("click", () => {
+      navMenu.classList.toggle("active");
+      menuToggle.classList.toggle("active");
     });
 
-    navLinks.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            navLinks.classList.remove('active');
-            menuToggle.textContent = '☰';
-        });
+    navMenu.querySelectorAll("a").forEach(link => {
+      link.addEventListener("click", () => {
+        navMenu.classList.remove("active");
+        menuToggle.classList.remove("active");
+      });
     });
-}
+  }
 
+  // Hero Video
+  document.querySelectorAll(".hero-video").forEach(video => {
+    video.muted = true;
+    video.play().catch(() => {});
+  });
 
-// HERO VIDEO AUTOPLAY
+  // Product Category Filter
+  const categoryButtons = document.querySelectorAll("[data-filter]");
+  const products = document.querySelectorAll("[data-category]");
 
-const heroVideo = document.querySelector('.hero-media video');
+  categoryButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      const selected = button.dataset.filter;
 
-if (heroVideo) {
-    heroVideo.muted = true;
-    heroVideo.loop = true;
-    heroVideo.playsInline = true;
+      categoryButtons.forEach(btn => btn.classList.remove("active"));
+      button.classList.add("active");
 
-    const playVideo = () => {
-        heroVideo.play().catch(() => {
-            console.log('Hero video autoplay is unavailable.');
-        });
-    };
-
-    playVideo();
-}
-
-
-// PRODUCT CATEGORY FILTER
-
-const categoryButtons = document.querySelectorAll('[data-category]');
-const productCards = document.querySelectorAll('[data-product-category]');
-
-categoryButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        const selectedCategory = button.dataset.category;
-
-        categoryButtons.forEach(item => {
-            item.classList.remove('active');
-        });
-
-        button.classList.add('active');
-
-        productCards.forEach(card => {
-            const productCategory = card.dataset.productCategory;
-
-            card.style.display =
-                selectedCategory === 'all' ||
-                productCategory === selectedCategory
-                    ? ''
-                    : 'none';
-        });
+      products.forEach(product => {
+        product.style.display =
+          selected === "all" || product.dataset.category === selected
+            ? ""
+            : "none";
+      });
     });
-});
+  });
 
+  // Shopping Cart
+  let cart = JSON.parse(localStorage.getItem("alMauoodCart")) || [];
 
-// PRODUCT IMAGE GALLERY
-
-document.querySelectorAll('.product-gallery').forEach(gallery => {
-
-    const mainImage = gallery.querySelector('.main-product-image');
-    const thumbnails = gallery.querySelectorAll('.gallery-thumbnail');
-
-    thumbnails.forEach(thumbnail => {
-        thumbnail.addEventListener('click', () => {
-
-            if (mainImage) {
-                mainImage.src = thumbnail.src;
-            }
-
-            thumbnails.forEach(item => {
-                item.classList.remove('active');
-            });
-
-            thumbnail.classList.add('active');
-        });
-    });
-});
-
-
-// ADD TO CART
-
-let cart = JSON.parse(localStorage.getItem('almauood_cart')) || [];
-
-function saveCart() {
-    localStorage.setItem('almauood_cart', JSON.stringify(cart));
+  function saveCart() {
+    localStorage.setItem("alMauoodCart", JSON.stringify(cart));
     updateCartCount();
-}
+  }
 
-function addToCart(product) {
-
-    if (!product || !product.id) return;
-
-    const existingProduct = cart.find(item =>
-        item.id === product.id
-    );
-
-    if (existingProduct) {
-        existingProduct.quantity += 1;
-    } else {
-        cart.push({
-            ...product,
-            quantity: 1
-        });
-    }
-
-    saveCart();
-    alert('Product added to your bag!');
-}
-
-function updateCartCount() {
-
-    const count = cart.reduce((total, item) => {
-        return total + item.quantity;
-    }, 0);
-
-    document.querySelectorAll('.cart-count').forEach(element => {
-        element.textContent = count;
+  function updateCartCount() {
+    const count = cart.reduce((total, item) => total + item.quantity, 0);
+    document.querySelectorAll(".cart-count").forEach(element => {
+      element.textContent = count;
     });
-}
+  }
 
-function removeFromCart(productId) {
-    cart = cart.filter(item => item.id !== productId);
-    saveCart();
-}
+  document.querySelectorAll("[data-add-to-cart]").forEach(button => {
+    button.addEventListener("click", () => {
+      const name = button.dataset.name;
+      const price = Number(button.dataset.price);
 
-function updateQuantity(productId, quantity) {
+      if (!name || !Number.isFinite(price)) return;
 
-    const product = cart.find(item => item.id === productId);
+      const existing = cart.find(item => item.name === name);
 
-    if (!product) return;
+      if (existing) {
+        existing.quantity++;
+      } else {
+        cart.push({ name, price, quantity: 1 });
+      }
 
-    if (quantity <= 0) {
-        removeFromCart(productId);
-        return;
-    }
-
-    product.quantity = quantity;
-    saveCart();
-}
-
-function getCartTotal() {
-
-    return cart.reduce((total, item) => {
-        return total + (Number(item.price) * item.quantity);
-    }, 0);
-}
-
-updateCartCount();
-
-
-// WHATSAPP ORDER
-
-const whatsappNumber = '923096789111';
-
-function orderOnWhatsApp() {
-
-    if (cart.length === 0) {
-        alert('Your shopping bag is empty!');
-        return;
-    }
-
-    let message = 'Assalamualaikum! I want to place an order from Al Mauood.\n\n';
-
-    cart.forEach((item, index) => {
-        message += `${index + 1}. ${item.name}\n`;
-        message += `Quantity: ${item.quantity}\n`;
-        message += `Price: Rs. ${item.price}\n\n`;
+      saveCart();
+      alert(name + " added to your AL MAUOOD cart.");
     });
+  });
 
-    message += `Total: Rs. ${getCartTotal()}\n\n`;
-    message += 'Please share the order details.';
+  // WhatsApp Order
+  document.querySelectorAll(".whatsapp-order").forEach(button => {
+    button.addEventListener("click", event => {
+      event.preventDefault();
 
-    const url =
-        `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      const message = encodeURIComponent(
+        "Assalamu Alaikum! I am interested in shopping from " + BRAND_NAME + "."
+      );
 
-    window.open(url, '_blank');
-}
-
-
-// NEWSLETTER
-
-const newsletterForm = document.querySelector('.newsletter-form');
-
-if (newsletterForm) {
-    newsletterForm.addEventListener('submit', event => {
-        event.preventDefault();
-
-        alert('Thank you for your interest in Al Mauood!');
-
-        newsletterForm.reset();
+      window.open(
+        `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`,
+        "_blank"
+      );
     });
-}
+  });
 
+  // Product Image Gallery
+  document.querySelectorAll(".product-gallery").forEach(gallery => {
+    const mainImage = gallery.querySelector(".main-image");
 
-// SCROLL ANIMATIONS
+    gallery.querySelectorAll(".gallery-thumb").forEach(thumb => {
+      thumb.addEventListener("click", () => {
+        if (mainImage) mainImage.src = thumb.src;
+      });
+    });
+  });
 
-const fadeElements = document.querySelectorAll('.fade-up');
+  // Newsletter
+  const newsletter = document.querySelector(".newsletter-form");
 
-if ('IntersectionObserver' in window) {
+  if (newsletter) {
+    newsletter.addEventListener("submit", event => {
+      event.preventDefault();
+      alert("Thank you for your interest in AL MAUOOD.");
+      newsletter.reset();
+    });
+  }
 
+  // Scroll Reveal
+  const revealItems = document.querySelectorAll(".reveal");
+
+  if ("IntersectionObserver" in window) {
     const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
 
-        entries.forEach(entry => {
+    revealItems.forEach(item => observer.observe(item));
+  } else {
+    revealItems.forEach(item => item.classList.add("visible"));
+  }
 
-            if (entry.isIntersecting) {
-                entry.target.classList.add('show');
-                observer.unobserve(entry.target);
-            }
+  // Current Year
+  const year = document.querySelector("#current-year");
+  if (year) year.textContent = new Date().getFullYear();
 
-        });
+  // Back To Top
+  const backToTop = document.querySelector(".back-to-top");
 
-    }, {
-        threshold: 0.12
+  if (backToTop) {
+    backToTop.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
+  }
 
-    fadeElements.forEach(element => {
-        observer.observe(element);
-    });
+  updateCartCount();
 
-} else {
-
-    fadeElements.forEach(element => {
-        element.classList.add('show');
-    });
-
-}
-
-
-// BACK TO TOP
-
-const backToTop = document.querySelector('.back-to-top');
-
-if (backToTop) {
-    backToTop.addEventListener('click', () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    });
-}
-
-
-// FOOTER CURRENT YEAR
-
-const yearElement = document.querySelector('.current-year');
-
-if (yearElement) {
-    yearElement.textContent = new Date().getFullYear();
-}
-
-
-// SOCIAL MEDIA LINKS
-
-const socialLinks = {
-    instagram: 'https://www.instagram.com/al_mauood/',
-    facebook: 'https://www.facebook.com/profile.php?id=100080461295090',
-    email: 'mailto:almauood.co@gmail.com',
-    whatsapp: 'https://wa.me/923096789111'
-};
-
-document.querySelectorAll('[data-social]').forEach(link => {
-
-    const platform = link.dataset.social;
-
-    if (socialLinks[platform]) {
-        link.href = socialLinks[platform];
-    }
-
+  console.log(BRAND_NAME + " website ready.");
 });
-
-
-// CONSOLE
-
-console.log('AL MAUOOD Store JavaScript Loaded Successfully!');
